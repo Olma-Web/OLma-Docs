@@ -1,0 +1,5 @@
+{
+  "label": "개발 및 아키텍처 가이드",
+  "position": 3,
+  "link": { "type": "doc", "id": "development/architecture-overview" }
+}

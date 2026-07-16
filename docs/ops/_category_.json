@@ -1,0 +1,5 @@
+{
+  "label": "운영/배포",
+  "position": 4,
+  "link": { "type": "doc", "id": "ops/deploy" }
+}

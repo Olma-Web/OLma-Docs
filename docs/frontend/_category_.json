@@ -1,0 +1,8 @@
+{
+  "label": "프론트엔드",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "OLma 프론트엔드의 구조, 라우팅, API 연동, 인증 흐름, 주요 사용자 플로우를 정리한다."
+  }
+}
