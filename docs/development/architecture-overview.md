@@ -135,8 +135,8 @@ registry.addMapping("/**")
 | `DataIntegrityViolationException` | 409 |
 | 그 외 `Exception` | 500 |
 
-:::info[403용 예외가 있어도 안 쓰는 도메인이 있다]
-`ForbiddenException`(→403)이 정의되어 있음에도, [단가 제출 API](../api/rate-submission)의 PATCH 권한 실패는 `NotFoundException`(→404)을 사용해 "존재 자체를 숨기는" 방식을 택했다. 즉 403을 쓸지 404로 위장할지는 전역 규칙이 아니라 **도메인/엔드포인트별 선택**이다. 새 엔드포인트를 작성할 때 어느 쪽이 맞는지는 코드를 보지 않고 짐작하지 말 것.
+:::info[권한 실패와 리소스 부재를 구분한다]
+소유권 실패처럼 인증은 되었지만 작업 권한이 없는 경우는 `ForbiddenException`(→403)을 사용한다. 반면 리소스가 없거나 HIDDEN 상태라 조회 대상이 아닌 경우는 `NotFoundException`(→404)을 사용한다. [단가 제출 API](../api/rate-submission)의 PATCH/DELETE와 Community 수정/삭제가 이 기준을 따른다.
 :::
 
 ---

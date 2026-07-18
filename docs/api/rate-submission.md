@@ -70,22 +70,22 @@ flowchart TD
   action -- "PATCH /project-name" --> patchLoad["ACTIVE 상태 id로 조회"]
   patchLoad --> patchOwner{"소유자 일치?"}
   patchOwner -- "Yes" --> patchUpdate["프로젝트명 수정"]
-  patchOwner -- "No" --> patch404["404 Not Found"]
-  action -- "DELETE /{id}" --> deleteLoad["ACTIVE 상태 id + userId로 조회"]
-  deleteLoad --> deleteFound{"본인 소유 ACTIVE 제보?"}
-  deleteFound -- "Yes" --> deleteHide["status = HIDDEN"]
-  deleteFound -- "No" --> delete404["404 Not Found"]
+  patchOwner -- "No" --> patch403["403 Forbidden"]
+  action -- "DELETE /{id}" --> deleteLoad["ACTIVE 상태 id로 조회"]
+  deleteLoad --> deleteOwner{"소유자 일치?"}
+  deleteOwner -- "Yes" --> deleteHide["status = HIDDEN"]
+  deleteOwner -- "No" --> delete403["403 Forbidden"]
   deleteHide --> delete204["204 No Content"]
 ```
 
 | 작업 | 소유권 확인 기준 | 실패 시 응답 | 현재 동작 |
 |------|------------------|--------------|-----------|
-| 프로젝트명 수정 | ACTIVE 상태의 `submission.id` + `request.userId` | 404 | 본인 소유가 아니면 존재하지 않는 것처럼 처리 |
-| 삭제 | ACTIVE 상태의 `submission.id` + `request.userId` | 404 | 본인 소유 제보만 숨김 처리 |
+| 프로젝트명 수정 | ACTIVE 상태의 `submission.id` 조회 후 `request.userId` 비교 | 403 | 본인 소유 제보만 수정 가능 |
+| 삭제 | ACTIVE 상태의 `submission.id` 조회 후 `request.userId` 비교 | 403 | 본인 소유 제보만 숨김 처리 |
 | 단건 조회 | ACTIVE 상태의 `submission.id` | 404 | HIDDEN 상태는 반환하지 않음 |
 
-:::warning[소유권 실패는 404로 위장한다]
-**PATCH**(`project-name` 수정)와 **DELETE**는 요청자의 `userId`와 제보의 소유자가 다르거나 소유자가 없으면 **404**를 반환한다 — 403이 아니라 "존재 자체를 숨기는" 방식이다. `RateSubmissionService.updateProjectName()`, `RateSubmissionService.delete()` 참고.
+:::note[소유권 실패는 403을 사용한다]
+**PATCH**(`project-name` 수정)와 **DELETE**는 ACTIVE 상태의 제보를 먼저 조회한 뒤 요청자의 `userId`와 제보 소유자를 비교한다. 제보가 없거나 HIDDEN 상태이면 404, 소유자가 아니면 403을 반환한다.
 :::
 
 ---
@@ -145,7 +145,8 @@ sequenceDiagram
 |-----------|-----------|
 | 400 | `amount < 10`, 필수 필드 누락(Bean Validation), 존재하지 않는 `jobCategoryId`/`experienceLevelId`, 또는 `normalizedMonthly`가 10~9,999 범위를 벗어남 |
 | 401 | JWT 미제공 또는 유효하지 않은 JWT |
-| 404 | 해당 `id`의 ACTIVE 제보가 없음, **또는** PATCH/DELETE 요청자가 소유자가 아님 (403 아님 — 위 소유권 정책 참고) |
+| 403 | PATCH/DELETE 요청자가 제보 소유자가 아님 |
+| 404 | 해당 `id`의 ACTIVE 제보가 없음 |
 
 ### 제한 사항 및 후속 개선
 
