@@ -62,34 +62,30 @@ flowchart TD
   nullValue --> save
 ```
 
-### 소유권 정책 — PATCH와 DELETE가 다르다
+### 소유권 정책 — PATCH와 DELETE
 
 ```mermaid
 flowchart TD
   request["인증된 사용자 요청"] --> action{"요청 종류"}
-  action -- "PATCH /project-name" --> patchLoad["id + userId로 조회"]
+  action -- "PATCH /project-name" --> patchLoad["ACTIVE 상태 id로 조회"]
   patchLoad --> patchOwner{"소유자 일치?"}
   patchOwner -- "Yes" --> patchUpdate["프로젝트명 수정"]
   patchOwner -- "No" --> patch404["404 Not Found"]
-  action -- "DELETE /{id}" --> deleteLoad["id로만 조회"]
-  deleteLoad --> deleteHide["status = HIDDEN"]
+  action -- "DELETE /{id}" --> deleteLoad["ACTIVE 상태 id + userId로 조회"]
+  deleteLoad --> deleteFound{"본인 소유 ACTIVE 제보?"}
+  deleteFound -- "Yes" --> deleteHide["status = HIDDEN"]
+  deleteFound -- "No" --> delete404["404 Not Found"]
   deleteHide --> delete204["204 No Content"]
 ```
 
 | 작업 | 소유권 확인 기준 | 실패 시 응답 | 현재 동작 |
 |------|------------------|--------------|-----------|
-| 프로젝트명 수정 | `submission.id` + `request.userId` | 404 | 본인 소유가 아니면 존재하지 않는 것처럼 처리 |
-| 삭제 | `submission.id`만 확인 | 없음 | 인증된 사용자가 id를 알면 숨김 처리 가능 |
-| 단건 조회 | `submission.id`만 확인 | 404 | 소유자와 status를 확인하지 않고 응답 |
+| 프로젝트명 수정 | ACTIVE 상태의 `submission.id` + `request.userId` | 404 | 본인 소유가 아니면 존재하지 않는 것처럼 처리 |
+| 삭제 | ACTIVE 상태의 `submission.id` + `request.userId` | 404 | 본인 소유 제보만 숨김 처리 |
+| 단건 조회 | ACTIVE 상태의 `submission.id` | 404 | HIDDEN 상태는 반환하지 않음 |
 
-:::warning[PATCH는 404로 소유권을 위장한다]
-**PATCH**(`project-name` 수정)는 요청자의 `userId`와 제보의 소유자가 다르거나 소유자가 없으면 **404**를 반환한다 — 403이 아니라 "존재 자체를 숨기는" 방식이다. `RateSubmissionService.updateProjectName()` 참고.
-:::
-
-:::danger[현재 구현 한계 — DELETE 소유권 검사 누락]
-`RateSubmissionService.delete()`는 `id`만으로 조회해 바로 `hide()` 처리하며, 요청자와 소유자를 비교하는 코드가 없다. 현재 구현에서는 **인증된 사용자가 다른 사용자의 제보도 삭제(숨김) 처리할 수 있다.**
-
-개선 방향은 `HttpServletRequest`에서 추출한 `userId`를 서비스에 전달하고, 제보 소유자와 다르면 404 또는 403을 반환하도록 변경하는 것이다. 이때 "타 사용자의 제보 삭제 요청은 실패한다"는 통합 테스트를 함께 추가해야 한다.
+:::warning[소유권 실패는 404로 위장한다]
+**PATCH**(`project-name` 수정)와 **DELETE**는 요청자의 `userId`와 제보의 소유자가 다르거나 소유자가 없으면 **404**를 반환한다 — 403이 아니라 "존재 자체를 숨기는" 방식이다. `RateSubmissionService.updateProjectName()`, `RateSubmissionService.delete()` 참고.
 :::
 
 ---
@@ -133,13 +129,13 @@ sequenceDiagram
 | 메서드 | 경로 | 인증 | 설명 |
 |--------|------|------|------|
 | `POST` | `/v1/submissions` | 필요 | 단가 제보 생성 |
-| `GET` | `/v1/submissions/{id}` | 필요 | 단가 제보 단건 조회 (status 무관) |
+| `GET` | `/v1/submissions/{id}` | 필요 | ACTIVE 단가 제보 단건 조회 |
 | `PATCH` | `/v1/submissions/{id}/project-name` | 필요 | 프로젝트명 수정 (본인 소유만) |
-| `DELETE` | `/v1/submissions/{id}` | 필요 | 소프트 삭제 (현재 구현은 소유권 검사 없음) |
+| `DELETE` | `/v1/submissions/{id}` | 필요 | 소프트 삭제 (본인 소유 ACTIVE 제보만) |
 
 요청/응답 필드의 전체 스키마는 Swagger UI(`/swagger-ui.html`, 백엔드 서버 경로)에서 확인한다. `RateSubmissionRequest`/`RateSubmissionResponse`에는 `projectName`(선택, 최대 100자) 필드도 포함된다.
 
-**참고 — 소프트 삭제의 실제 동작:** `delete`는 물리 삭제가 아니라 `RateSubmission.hide()`를 통해 `status`를 `HIDDEN`으로 바꾸는 소프트 삭제다. 다만 `RateSubmissionService.getById()`는 `status`와 무관하게 조회 결과를 그대로 반환한다 — 즉 삭제(숨김) 처리된 제보도 ID를 알면 GET으로 그대로 조회된다. 목록 조회 API가 없어 현재 코드 기준으로는 "숨김" 처리의 효과가 실질적으로 나타나는 지점이 없다.
+**참고 — 소프트 삭제의 실제 동작:** `delete`는 물리 삭제가 아니라 `RateSubmission.hide()`를 통해 `status`를 `HIDDEN`으로 바꾸는 소프트 삭제다. `RateSubmissionService.getById()`는 ACTIVE 상태만 조회하므로, 삭제(숨김) 처리된 제보는 ID를 알아도 404로 응답한다.
 
 ---
 
@@ -149,23 +145,13 @@ sequenceDiagram
 |-----------|-----------|
 | 400 | `amount < 10`, 필수 필드 누락(Bean Validation), 존재하지 않는 `jobCategoryId`/`experienceLevelId`, 또는 `normalizedMonthly`가 10~9,999 범위를 벗어남 |
 | 401 | JWT 미제공 또는 유효하지 않은 JWT |
-| 404 | 해당 `id`의 제보가 없음, **또는** PATCH 요청자가 소유자가 아님 (403 아님 — 위 소유권 정책 참고) |
+| 404 | 해당 `id`의 ACTIVE 제보가 없음, **또는** PATCH/DELETE 요청자가 소유자가 아님 (403 아님 — 위 소유권 정책 참고) |
 
-### 제한 사항 및 후속 테스트
+### 제한 사항 및 후속 개선
 
 | 항목 | 현재 동작 | 위험 | 후속 개선 |
 |------|-----------|------|-----------|
-| DELETE 소유권 검사 | `id`만으로 조회 후 `HIDDEN` 처리 | 타 사용자 제보 숨김 가능 | `userId`를 서비스에 전달하고 소유자 불일치 시 404 또는 403 반환 |
-| HIDDEN 제보 단건 조회 | `getById`가 status를 확인하지 않음 | 숨김 처리 후에도 id를 알면 조회 가능 | 조회 시 `ACTIVE` 조건 적용 또는 HIDDEN 응답 정책 명시 |
 | `SubmissionType` 의미 | `TRACK_A`, `TRACK_B` 이름만 존재 | 클라이언트/문서에서 의미 해석 어려움 | 도메인 용어로 리네임하거나 Swagger 설명 보강 |
-
-권한 관련 개선 시에는 아래 테스트를 함께 추가한다.
-
-| 테스트 | 기대 결과 |
-|--------|-----------|
-| 다른 사용자의 제보를 DELETE 요청 | 404 또는 403 |
-| HIDDEN 제보를 GET 요청 | 정책 결정 후 404 또는 현재 동작 유지 |
-| 본인 제보 프로젝트명 수정 | 200 및 변경된 `projectName` 반환 |
 
 ---
 

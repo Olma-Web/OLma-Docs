@@ -82,20 +82,18 @@ flowchart LR
 
 ### 3.1 CommunityContentStatus (`ACTIVE` / `HIDDEN`)
 
-`CommunityPost`/`CommunityComment`도 `RateSubmission`과 같은 이름의 소프트 삭제 패턴(`status` 필드 + `hide()`)을 쓴다. 다만 실제 동작은 다르다.
+`CommunityPost`/`CommunityComment`도 `RateSubmission`과 같은 이름의 소프트 삭제 패턴(`status` 필드 + `hide()`)을 쓴다. 조회 시에는 두 도메인 모두 ACTIVE 상태를 기준으로 필터링한다.
 
-:::info[같은 패턴, 다른 결과 — RateSubmission과 대조]
-`CommunityService.java`는 게시글/댓글 조회 전반에서 `CommunityContentStatus.ACTIVE`로 명시적으로 필터링한다(예: `findAllByPost_IdAndStatusOrderByCreatedAtAsc(postId, CommunityContentStatus.ACTIVE)`). 즉 여기서는 숨김 처리가 실제로 조회 결과에서 제외되는 방식으로 작동한다.
-
-반면 [단가 제출 API](../api/rate-submission)의 `getById`는 `status`를 확인하지 않아 숨김 처리된 제보도 그대로 조회된다([아키텍처 개요](./architecture-overview#4-전역-예외-처리) 참고). 같은 이름의 상태 패턴이 도메인마다 실제로 강제되는 정도가 다르다는 점에 주의한다.
+:::info[같은 패턴, 같은 조회 원칙]
+`CommunityService.java`는 게시글/댓글 조회 전반에서 `CommunityContentStatus.ACTIVE`로 명시적으로 필터링한다(예: `findAllByPost_IdAndStatusOrderByCreatedAtAsc(postId, CommunityContentStatus.ACTIVE)`). [단가 제출 API](../api/rate-submission)의 `getById`도 `SubmissionStatus.ACTIVE` 조건으로 조회하므로, HIDDEN 상태는 단건 조회에서 404로 처리된다.
 :::
 
 ```mermaid
 flowchart TD
   hidden["hide() 호출"] --> rate["RateSubmission.status = HIDDEN"]
   hidden --> community["CommunityContent.status = HIDDEN"]
-  rate --> rateGet["getById: status 확인 없음"]
-  rateGet --> rateVisible["ID를 알면 응답 가능"]
+  rate --> rateGet["getById: ACTIVE 필터"]
+  rateGet --> rateHidden["조회 결과에서 제외"]
   community --> communityList["목록/댓글 조회: ACTIVE 필터"]
   communityList --> communityHidden["조회 결과에서 제외"]
 ```

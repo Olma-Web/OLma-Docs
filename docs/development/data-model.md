@@ -128,7 +128,7 @@ erDiagram
 | 직무 카테고리 계층 | `job_categories.parent_id`가 같은 테이블을 참조한다. | depth/displayOrder와 함께 계층형 직무 탐색에 사용된다. |
 | 커뮤니티 작성자 스냅샷 | 게시글/댓글은 작성 당시 직무/경력 정보를 별도 컬럼으로 보관한다. | 사용자가 이후 프로필을 바꿔도 기존 게시글의 작성자 맥락은 유지된다. |
 | JSONB 사용 | `saved_estimates.addons`, `negotiation_result` 등 일부 상태는 JSONB로 저장된다. | 스키마가 유연한 대신 DB 레벨 제약과 검색성은 낮아진다. |
-| 소프트 삭제 | `rate_submissions`, `community_posts`, `community_comments`는 status 기반 숨김 처리를 사용한다. | 도메인별 조회 필터 적용 여부가 다르므로 API 문서의 정책 표를 함께 확인한다. |
+| 소프트 삭제 | `rate_submissions`, `community_posts`, `community_comments`는 status 기반 숨김 처리를 사용한다. | 조회 API는 ACTIVE 상태를 기준으로 응답한다. |
 | 좋아요 중복 방지 | `community_post_likes`, `community_comment_likes`는 사용자/대상 조합에 unique constraint를 둔다. | 같은 사용자의 중복 좋아요를 DB 제약으로도 막는다. |
 
 ---
@@ -140,12 +140,12 @@ flowchart LR
   status["status 컬럼"] --> rate["RateSubmission"]
   status --> community["Community"]
   rate --> rateDelete["DELETE: HIDDEN으로 변경"]
-  rateDelete --> rateGet["GET by id: status 필터 없음"]
+  rateDelete --> rateGet["GET by id: ACTIVE 조건 사용"]
   community --> communityHide["게시글/댓글 hide(): HIDDEN으로 변경"]
   communityHide --> communityQuery["목록/댓글 조회: ACTIVE 조건 사용"]
 ```
 
-같은 `status` 기반 소프트 삭제 패턴을 사용하더라도, 조회 시점에 `ACTIVE` 조건을 강제하는지는 도메인마다 다르다. 단가 제보의 현재 동작은 [단가 제출 API 가이드](../api/rate-submission)에서 별도 제한 사항으로 관리한다.
+같은 `status` 기반 소프트 삭제 패턴을 사용하며, 조회 시점에는 `ACTIVE` 조건을 강제한다. 단가 제보의 소유권/숨김 정책은 [단가 제출 API 가이드](../api/rate-submission)에서 관리한다.
 
 ---
 

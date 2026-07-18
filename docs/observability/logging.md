@@ -231,15 +231,3 @@ Caddy access log는 Promtail pipeline에서 JSON 파싱하여 `status`, `method`
 | `GlobalExceptionHandler` 예외 로그 추가 | ✅ |
 | 핵심 비즈니스 이벤트 로그 추가 | ✅ |
 | 배치 작업 시작/완료/실패 로그 | ✅ |
-
-추가 개선 후보:
-
-| 항목 | 상태 |
-|------|------|
-| JSON structured log 전환 | ⬜ |
-| Promtail pipeline에서 Caddy JSON 로그 파싱 | ✅ |
-| Spring Boot 로그 JSON 파싱 | ⬜ |
-| Grafana 로그 대시보드 개선 | ⬜ |
-| Prometheus 기반 Grafana 알림 | ✅ |
-| Loki 로그 기반 WARN/ERROR 알림 | ⬜ |
-| traceId/spanId 도입 검토 | ⬜ |
