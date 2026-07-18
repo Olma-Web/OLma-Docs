@@ -84,34 +84,30 @@ private static final List<String> PERMIT_PREFIXES = List.of(
 - 토큰이 있으면 `JwtProvider.validateJwtToken()`으로 서명/만료 검증 후, `request.setAttribute("userId", userId)`로 컨트롤러에 전달하고 `MDC.put("userId", ...)`로 로그에도 남긴다.
 - 이 프로젝트는 **Spring Security를 사용하지 않는다** (`build.gradle.kts`엔 `spring-security-crypto`만 있고 Security 스타터가 없음). `SecurityContextHolder`나 `Authentication` 객체가 없으므로, 인증된 사용자가 필요한 모든 컨트롤러는 `(Long) httpRequest.getAttribute("userId")`로 직접 꺼내 쓴다.
 
-### 2.3 어노테이션의 착시 — `@SecurityRequirement`는 문서용 장식이다
+### 2.3 `@SecurityRequirement`와 실제 인증 기준
 
-:::warning[`@SecurityRequirement`가 실제 인증을 강제하지 않는다]
 컨트롤러에 붙은 `@SecurityRequirement(name = "BearerAuth")`(`OpenApiConfig`에서 정의)는 Swagger UI에 자물쇠 아이콘을 표시하는 **문서화 목적**일 뿐이다. 실제로 어떤 경로가 인증을 요구하는지는 전적으로 `JwtFilter`의 `PERMIT_PREFIXES` 목록이 결정한다.
 
 즉 컨트롤러에 이 어노테이션을 붙이거나 빼도 실제 인증 여부는 바뀌지 않는다. 새 컨트롤러를 인증 없이 열고 싶다면 어노테이션을 빼는 게 아니라 `PERMIT_PREFIXES`에 경로를 추가해야 하고, 반대로 어노테이션이 없는 컨트롤러도 `PERMIT_PREFIXES`에 없으면 그대로 인증이 강제된다.
-:::
 
 ---
 
 ## 3. 전역 설정 (WebConfig)
 
-`config/WebConfig.java`는 `WebMvcConfigurer`를 구현하며 프로파일 구분 없이(`@Profile` 미지정) dev/prod 모두에 적용된다.
+`config/WebConfig.java`는 `WebMvcConfigurer`를 구현하며, CORS 허용 origin은 프로파일별 설정값으로 분리한다.
 
 ### CORS
 
 ```java
 registry.addMapping("/**")
-        .allowedOriginPatterns("*")
+        .allowedOriginPatterns(allowedOriginPatterns)
         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
         .allowedHeaders("*")
         .allowCredentials(true)
         .maxAge(3600);
 ```
 
-:::danger[와일드카드 오리진 + 자격 증명 허용 — 운영 환경에도 그대로 적용됨]
-`allowedOriginPatterns("*")`와 `allowCredentials(true)`를 함께 쓰면 사실상 모든 오리진에서 자격 증명(쿠키/인증 헤더)을 포함한 요청을 허용하는 것과 같다. `application-dev.yaml`/`application-prod.yaml`에 이를 제한하는 별도 설정이 없어 **이 설정은 개발 편의용이 아니라 운영 환경에도 동일하게 적용된다.** [운영/배포 문서](../ops/deploy)에 이미 기록된 "8080 포트 전체 공개" 경고와 같은 맥락의 보안 검토 대상이다. AI Agent나 새 개발자는 이 설정을 "안전하게 재사용해도 되는 패턴"으로 오해하지 않아야 한다.
-:::
+기본 설정은 로컬 개발 origin(`http://localhost:3000`, `http://localhost:3001`)을 허용하고, 운영 프로파일은 `https://olma.kro.kr`, `https://*.olma.kro.kr`만 허용한다. 필요하면 `CORS_ALLOWED_ORIGIN_PATTERNS` 환경 변수로 배포 환경의 허용 origin을 명시적으로 덮어쓸 수 있다.
 
 ### 기타 전역 설정
 - `KstOffsetDateTimeSerializer`를 `Jackson2ObjectMapperBuilderCustomizer`로 등록해 모든 `OffsetDateTime` 응답 필드를 KST 오프셋으로 직렬화.
