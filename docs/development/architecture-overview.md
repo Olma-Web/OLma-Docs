@@ -94,20 +94,22 @@ private static final List<String> PERMIT_PREFIXES = List.of(
 
 ## 3. 전역 설정 (WebConfig)
 
-`config/WebConfig.java`는 `WebMvcConfigurer`를 구현하며, CORS 허용 origin은 프로파일별 설정값으로 분리한다.
+`config/WebConfig.java`는 `WebMvcConfigurer`를 구현하며 프로파일 구분 없이(`@Profile` 미지정) dev/prod 모두에 적용된다.
 
 ### CORS
 
 ```java
 registry.addMapping("/**")
-        .allowedOriginPatterns(allowedOriginPatterns)
+        .allowedOriginPatterns("*")
         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
         .allowedHeaders("*")
         .allowCredentials(true)
         .maxAge(3600);
 ```
 
-기본 설정은 로컬 개발 origin(`http://localhost:3000`, `http://localhost:3001`)을 허용하고, 운영 프로파일은 `https://olma.kro.kr`, `https://*.olma.kro.kr`만 허용한다. 필요하면 `CORS_ALLOWED_ORIGIN_PATTERNS` 환경 변수로 배포 환경의 허용 origin을 명시적으로 덮어쓸 수 있다.
+:::danger[와일드카드 오리진 + 자격 증명 허용 — 운영 환경에도 그대로 적용됨]
+`allowedOriginPatterns("*")`와 `allowCredentials(true)`를 함께 쓴다. 운영 환경에서도 동일하게 적용되는 의도적인 현재 정책이므로, 이 설정을 변경할 때는 프론트엔드 배포 origin과 인증 헤더 동작을 함께 확인한다.
+:::
 
 ### 기타 전역 설정
 - `KstOffsetDateTimeSerializer`를 `Jackson2ObjectMapperBuilderCustomizer`로 등록해 모든 `OffsetDateTime` 응답 필드를 KST 오프셋으로 직렬화.

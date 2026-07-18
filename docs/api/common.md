@@ -173,13 +173,13 @@ flowchart LR
 
 | 항목 | 값 |
 |------|----|
-| allowedOriginPatterns | 로컬: `http://localhost:3000`, `http://localhost:3001` / 운영: `https://olma.kro.kr`, `https://*.olma.kro.kr` |
+| allowedOriginPatterns | `*` |
 | allowedMethods | `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `OPTIONS` |
 | allowedHeaders | `*` |
 | allowCredentials | `true` |
 | maxAge | `3600` |
 
-운영 환경의 허용 origin은 `application-prod.yaml`에서 제한하며, 배포 환경에서는 `CORS_ALLOWED_ORIGIN_PATTERNS`로 덮어쓸 수 있다.
+운영 환경에서도 동일하게 적용되는 현재 정책이다.
 
 ---
 
