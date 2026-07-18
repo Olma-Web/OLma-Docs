@@ -34,10 +34,6 @@ flowchart LR
 - 배포 스크립트가 EC2 "내부"에서 로컬로 실행되므로, GitHub 쪽 시크릿으로는 GitHub가 자동 발급하는 `secrets.GITHUB_TOKEN`(GHCR 로그인용)만 있으면 된다. SSH 개인키나 AWS 자격 증명을 GitHub Secrets에 등록해 외부에서 EC2로 밀어 넣는(push) 구조가 아니다.
 - DB 비밀번호, JWT 시크릿 같은 런타임 민감 정보는 GitHub을 거치지 않고 EC2에 이미 있는 `/home/ubuntu/olma.env`(Terraform user_data가 생성)에서 컨테이너로 바로 주입된다.
 
-:::info[대가 없는 이점은 아니다]
-Self-hosted runner는 EC2 인스턴스 한 대에 강하게 결합되어 있다. 인스턴스가 재생성되면 runner 등록도 함께 사라지므로, 누군가 수동으로 재등록하기 전까지는 `deploy`/`deploy-docs` job이 실행될 러너 자체가 없어 배포가 조용히 진행되지 않는다. 자세한 배경은 아래 [Watchtower 제거 이유](#watchtower-제거-이유) 참고.
-:::
-
 ---
 
 ## GitHub Actions 워크플로우
@@ -179,10 +175,6 @@ flowchart TD
   ghcr["GHCR"] --> api
 ```
 
-:::info[백엔드 API HTTPS]
-현재 공개 API는 `https://api.olma.kro.kr`로 서비스된다. `http://api.olma.kro.kr` 요청은 Caddy가 HTTPS로 리다이렉트하며, Swagger UI와 OpenAPI JSON도 HTTPS에서 응답한다.
-:::
-
 ### 런타임 요청 경로
 
 ```mermaid
@@ -208,10 +200,6 @@ sequenceDiagram
     Promtail->>Loki: push log stream
   end
 ```
-
-:::info[Terraform 도메인 변수]
-`terraform/variables.tf`의 `domain`은 백엔드 API 도메인(`api.olma.kro.kr`), `docs_domain`은 문서 사이트 도메인(`docs.olma.kro.kr`), `grafana_domain`은 Grafana 도메인(`grafana.olma.kro.kr`)으로 사용된다. Caddyfile은 이 값들을 사용해 HTTPS site block을 생성한다.
-:::
 
 ---
 

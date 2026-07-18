@@ -39,12 +39,6 @@ flowchart TD
   exception["GlobalExceptionHandler"] --> dto
 ```
 
-:::info[레이어링 예외 — ReferenceDataController]
-`ReferenceDataController`(직무 카테고리/근무 형태/지역/경력/자격증 조회)만 Service 계층 없이 Repository를 직접 주입받아 사용한다. 단순 조회 전용이라는 이유로 보이지만, 다른 컨트롤러와 다른 패턴이므로 이 도메인을 수정할 때는 Service 계층을 새로 만들지, 기존 패턴을 유지할지 먼저 확인이 필요하다.
-:::
-
----
-
 ## 2. 인증 및 요청 진입 필터 아키텍처
 
 ### 2.1 필터 체인 흐름
@@ -132,10 +126,6 @@ registry.addMapping("/**")
 | `DuplicateValueException` | 409 |
 | `DataIntegrityViolationException` | 409 |
 | 그 외 `Exception` | 500 |
-
-:::info[권한 실패와 리소스 부재를 구분한다]
-소유권 실패처럼 인증은 되었지만 작업 권한이 없는 경우는 `ForbiddenException`(→403)을 사용한다. 반면 리소스가 없거나 HIDDEN 상태라 조회 대상이 아닌 경우는 `NotFoundException`(→404)을 사용한다. [단가 제출 API](../api/rate-submission)의 PATCH/DELETE와 Community 수정/삭제가 이 기준을 따른다.
-:::
 
 ---
 

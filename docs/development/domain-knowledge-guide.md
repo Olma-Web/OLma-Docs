@@ -18,12 +18,6 @@ description: 이름만으로는 파악하기 어려운 도메인 용어와 enum�
 
 ### 1.1 SubmissionType (`TRACK_A` / `TRACK_B`)
 
-현재 코드와 Swagger 스키마만으로는 두 트랙의 실제 비즈니스 의미를 확정하기 어렵다.
-
-:::info[기획 의도 확인 대상 — 리네임으로 의미가 약해진 enum]
-DB 마이그레이션(`V6__align_data_types_and_logic.sql`) 기준, 이 필드는 원래 `ESTIMATE`(견적)와 `COMPARE`(비교)라는 직관적인 이름이었으나 `TRACK_A`/`TRACK_B`로 리네임됐다. 현재 Java enum에는 주석이 없어 리네임 이후의 의미 차이를 코드만으로 확정할 수 없다. 기능을 확장할 때는 enum 이름을 도메인 용어로 복원하거나, 각 값의 의도를 문서와 Swagger 스키마에 함께 남기는 것이 좋다.
-:::
-
 ### 1.2 SubmissionStatus (`ACTIVE` / `FLAGGED` / `HIDDEN`)
 
 - **ACTIVE / HIDDEN**: 제보의 활성 상태와 소프트 삭제(숨김)를 표현하며 실제 서비스 로직(`RateSubmissionService.delete()` → `hide()`)에서 사용된다.
@@ -83,10 +77,6 @@ flowchart LR
 ### 3.1 CommunityContentStatus (`ACTIVE` / `HIDDEN`)
 
 `CommunityPost`/`CommunityComment`도 `RateSubmission`과 같은 이름의 소프트 삭제 패턴(`status` 필드 + `hide()`)을 쓴다. 조회 시에는 두 도메인 모두 ACTIVE 상태를 기준으로 필터링한다.
-
-:::info[같은 패턴, 같은 조회 원칙]
-`CommunityService.java`는 게시글/댓글 조회 전반에서 `CommunityContentStatus.ACTIVE`로 명시적으로 필터링한다(예: `findAllByPost_IdAndStatusOrderByCreatedAtAsc(postId, CommunityContentStatus.ACTIVE)`). [단가 제출 API](../api/rate-submission)의 `getById`도 `SubmissionStatus.ACTIVE` 조건으로 조회하므로, HIDDEN 상태는 단건 조회에서 404로 처리된다.
-:::
 
 ```mermaid
 flowchart TD

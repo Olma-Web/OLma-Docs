@@ -84,17 +84,9 @@ flowchart TD
 | 삭제 | ACTIVE 상태의 `submission.id` 조회 후 `request.userId` 비교 | 403 | 본인 소유 제보만 숨김 처리 |
 | 단건 조회 | ACTIVE 상태의 `submission.id` | 404 | HIDDEN 상태는 반환하지 않음 |
 
-:::note[소유권 실패는 403을 사용한다]
-**PATCH**(`project-name` 수정)와 **DELETE**는 ACTIVE 상태의 제보를 먼저 조회한 뒤 요청자의 `userId`와 제보 소유자를 비교한다. 제보가 없거나 HIDDEN 상태이면 404, 소유자가 아니면 403을 반환한다.
-:::
-
 ---
 
 ## 2. API 연동 시나리오
-
-:::note
-아래 흐름은 클라이언트가 단가 제보 화면을 구현할 때 자연스럽게 따르게 되는 권장 호출 순서다. 백엔드는 이 순서를 강제하지 않으며, 세 컨트롤러 모두 서로 독립적으로 호출 가능하다.
-:::
 
 ```text
 [ReferenceData 조회] → [RateSubmission 생성] → [Benchmark 조회] (선택)
