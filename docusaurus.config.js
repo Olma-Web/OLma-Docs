@@ -81,7 +81,7 @@ const config = {
             label: '운영',
           },
           {
-            to: '/api/openapi',
+            href: 'https://olma-web.github.io/OLma-Docs/openapi-viewer.html',
             label: 'OpenAPI',
             position: 'right',
           },

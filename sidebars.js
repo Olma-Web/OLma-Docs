@@ -37,7 +37,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'API 레퍼런스',
-      items: ['api/common', 'api/openapi', 'api/domain-summary', 'api/rate-submission'],
+      items: ['api/common', 'api/domain-summary', 'api/rate-submission'],
     },
   ],
   opsSidebar: [
