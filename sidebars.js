@@ -4,6 +4,7 @@
 const sidebars = {
   mainSidebar: [
     'intro',
+    'screenshots',
     'team-contributions',
     'getting-started/local-development',
   ],
