@@ -81,7 +81,7 @@ const config = {
             label: '운영',
           },
           {
-            href: 'https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json',
+            to: '/api/openapi',
             label: 'OpenAPI',
             position: 'right',
           },
