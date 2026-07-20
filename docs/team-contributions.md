@@ -16,7 +16,7 @@ description: OLma 프로젝트 팀원별 담당 영역과 주요 기여 내역
 | 김민조 (`Mayne0213`) | 프론트엔드 기능 보수, 백엔드 Estimate/Community API 개발, 인프라/배포/모니터링 구축 |
 | 김서윤 | 프론트엔드 화면 개발, 대시보드/커리어/설정 UI 구현 |
 | 손수지 | 프론트엔드 기능 개발, 견적 계산기/온보딩/커뮤니티 구현 |
-| 정휘준 | 백엔드 인증/보안 개발, 로깅/문서화, PR 관리 |
+| 정휘준 | 백엔드 인증/보안 개발, 로깅/모니터링 및 문서 배포 파이프라인 기여, PR 관리 |
 
 ## 상세 기여
 
@@ -82,11 +82,25 @@ description: OLma 프로젝트 팀원별 담당 영역과 주요 기여 내역
 
 ### 정휘준 (`ralph-Jung`, `Ralph`)
 
+#### BE
+
 - Spring Boot 기반 백엔드 API 개발
 - 회원가입/로그인 API 개발
 - JWT 및 Spring Security 기반 인증 구조 개선
 - 로그인/회원가입 트랜잭션 범위 최적화
 - 커뮤니티 댓글 좋아요 API 개발
-- 구조화 로깅 및 Discord 에러 로그 연동
+- 단가 제출 소유권 검증 및 활성 제출 데이터 기준 보수
+
+#### Infra / Observability
+
+- Docusaurus 문서 사이트 초기 구성 및 GitHub Actions 배포 파이프라인 구축
+- HTTP percentile histogram 메트릭 추가 및 Grafana 대시보드 패널 구성
+- DB Connection Pool 대시보드 패널 정리
+- Grafana latency alert NaN 방어 로직 보수
+- metric alert의 Discord 라우팅 정리
+- request tracing 기반 구조화 로깅 및 ERROR-level Discord webhook 연동
+
+#### Docs / Management
+
 - Docusaurus 기반 API/개발 문서 작성
 - 백엔드 PR 병합 관리
