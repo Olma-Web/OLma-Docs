@@ -11,7 +11,7 @@ main 브랜치 push
   -> GitHub Actions: test (ubuntu-latest)
   -> GitHub Actions: build & push to GHCR (ubuntu-24.04-arm)
   -> GitHub Actions: deploy (self-hosted runner on EC2)        -- 백엔드 컨테이너 교체
-  -> GitHub Actions: deploy-docs (self-hosted runner on EC2)   -- 이 문서 사이트 자체 배포
+  -> OLma-Docs GitHub Actions: Deploy Docs                    -- GitHub Pages 문서 배포
 ```
 
 ```mermaid
@@ -21,15 +21,15 @@ flowchart LR
   build --> ghcr["GHCR<br/>olma-backend:latest"]
   ghcr --> deploy["deploy<br/>self-hosted runner"]
   deploy --> container["olma-backend 컨테이너 교체"]
-  push --> docsBuild["deploy-docs<br/>npm ci / build"]
-  docsBuild --> docsSync["/var/www/docs 동기화"]
+  docsPush["OLma-Docs main push"] --> docsBuild["Deploy Docs<br/>npm ci / build"]
+  docsBuild --> pages["GitHub Pages<br/>olma-web.github.io/OLma-Docs"]
 ```
 
-배포는 GitHub Actions의 `deploy`/`deploy-docs` job이 EC2 위에 올라간 self-hosted runner를 통해 직접 처리한다. Watchtower 같은 자동 업데이트 도구는 사용하지 않는다.
+백엔드 배포는 GitHub Actions의 `deploy` job이 EC2 위에 올라간 self-hosted runner를 통해 직접 처리한다. 문서 사이트는 `OLma-Docs` 레포지토리의 GitHub Actions가 GitHub Pages로 배포한다. Watchtower 같은 자동 업데이트 도구는 사용하지 않는다.
 
 ### Self-hosted runner를 쓰는 이유
 
-`test`/`build` job은 GitHub이 제공하는 호스티드 러너(`ubuntu-latest`, `ubuntu-24.04-arm`)를 쓰지만, 실제 배포(`deploy`, `deploy-docs`)는 EC2 내부에 설치된 self-hosted runner가 담당한다.
+`test`/`build` job은 GitHub이 제공하는 호스티드 러너(`ubuntu-latest`, `ubuntu-24.04-arm`)를 쓰지만, 백엔드 실제 배포(`deploy`)는 EC2 내부에 설치된 self-hosted runner가 담당한다. 문서 사이트 배포는 `OLma-Docs` 레포지토리의 GitHub-hosted runner와 GitHub Pages가 담당한다.
 
 - 배포 스크립트가 EC2 "내부"에서 로컬로 실행되므로, GitHub 쪽 시크릿으로는 GitHub가 자동 발급하는 `secrets.GITHUB_TOKEN`(GHCR 로그인용)만 있으면 된다. SSH 개인키나 AWS 자격 증명을 GitHub Secrets에 등록해 외부에서 EC2로 밀어 넣는(push) 구조가 아니다.
 - DB 비밀번호, JWT 시크릿 같은 런타임 민감 정보는 GitHub을 거치지 않고 EC2에 이미 있는 `/home/ubuntu/olma.env`(Terraform user_data가 생성)에서 컨테이너로 바로 주입된다.
@@ -85,33 +85,23 @@ deploy:
           ghcr.io/olma-web/olma-backend:latest
 ```
 
-### deploy-docs job (문서 사이트 — 이 사이트 자체)
+### Deploy Docs workflow (문서 사이트)
 
-- 조건: `push` 이벤트이고 브랜치가 `main` 일 때만 실행.
-- 실행 환경: `self-hosted` — 백엔드와 같은 EC2, 같은 runner.
-- `docs-site/`에서 `npm ci` → `npm run build` 실행 후, 빌드 결과물을 `rsync --delete`로 EC2의 `/var/www/docs`에 동기화한다.
-- Docker 컨테이너가 아니라 Caddy가 `/var/www/docs`를 정적 파일로 직접 서빙한다(아래 EC2 인프라 섹션 참고).
+- 위치: `OLma-Docs/.github/workflows/deploy-docs.yml`
+- 조건: `push` 이벤트이고 브랜치가 `main` 일 때 GitHub Pages에 배포한다. PR에서는 빌드 검증만 수행한다.
+- 실행 환경: `ubuntu-latest`
+- 순서: `npm ci` → `npm run build` → Pages artifact 업로드 → GitHub Pages 배포.
+- 배포 URL: `https://olma-web.github.io/OLma-Docs/`
 
 ```yaml
-# .github/workflows/ci.yml
-deploy-docs:
-  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  runs-on: self-hosted
+# OLma-Docs/.github/workflows/deploy-docs.yml
+deploy:
+  needs: build
+  if: github.event_name != 'pull_request'
+  runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Install dependencies
-      run: npm ci
-      working-directory: docs-site
-    - name: Build
-      run: npm run build
-      working-directory: docs-site
-    - name: Deploy to /var/www/docs
-      run: |
-        sudo mkdir -p /var/www/docs
-        sudo rsync -a --delete docs-site/build/ /var/www/docs/
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v4
 ```
 
 ---
@@ -126,7 +116,7 @@ deploy-docs:
 - JVM 옵션: `-XX:+UseG1GC -XX:MaxRAMPercentage=75.0`
 - 포트: `8080`
 
-문서 사이트(`deploy-docs`)는 Docker 이미지로 빌드되지 않는다 — Node.js로 정적 파일을 빌드해 EC2에 직접 동기화하는 별도 경로다.
+문서 사이트는 Docker 이미지로 빌드되지 않는다. `OLma-Docs`에서 Node.js로 정적 파일을 빌드하고 GitHub Pages가 artifact를 서빙한다.
 
 ---
 
@@ -143,15 +133,10 @@ deploy-docs:
 | 리버스 프록시 | Caddy |
 | 백엔드 포트 | 8080 (Caddy가 로컬 루프백으로 프록시) |
 
-Caddy는 EC2 user_data로 설치되며, Terraform 기준 `Caddyfile`은 문서 사이트, 백엔드 API, Grafana에 각각 도메인 블록을 둔다. 각 도메인은 Caddy의 자동 HTTPS 대상이다.
+Caddy는 EC2 user_data로 설치되며, Terraform 기준 `Caddyfile`은 백엔드 API와 Grafana 도메인 블록을 둔다. 각 도메인은 Caddy의 자동 HTTPS 대상이다. 문서 사이트는 GitHub Pages에서 별도로 서빙한다.
 
 ```
 Caddyfile:
-${var.docs_domain} {
-  root * /var/www/docs
-  file_server
-}
-
 ${var.domain} {
   reverse_proxy localhost:8080
 }
@@ -164,9 +149,9 @@ ${var.grafana_domain} {
 ```mermaid
 flowchart TD
   internet["Internet"] --> caddy["Caddy on EC2"]
-  caddy --> docs["/var/www/docs<br/>Docusaurus 정적 파일"]
   caddy --> api["olma-backend:8080<br/>Spring Boot"]
   caddy --> grafanaUi["Grafana:3000<br/>대시보드"]
+  pages["GitHub Pages"] --> docs["OLma-Docs<br/>Docusaurus 정적 파일"]
   api --> rds[("RDS PostgreSQL 17")]
   api --> dockerLogs["Docker stdout logs"]
   dockerLogs --> promtail["Promtail"]
@@ -188,9 +173,7 @@ sequenceDiagram
   participant Loki
 
   Client->>Caddy: HTTPS request
-  alt 문서 사이트
-    Caddy-->>Client: /var/www/docs 정적 파일
-  else 백엔드 API
+  alt 백엔드 API
     Caddy->>Backend: reverse_proxy localhost:8080
     Backend->>RDS: JPA query
     RDS-->>Backend: result
@@ -244,7 +227,7 @@ Grafana는 `grafana.olma.kro.kr`에서 Caddy HTTPS를 통해 공개된다. 운�
 - EC2 인스턴스가 재생성되면 Terraform user_data가 초기 컨테이너를 기동하는 동시에 Watchtower가 별도로 컨테이너를 교체하는 타이밍 충돌이 발생했다.
 - 배포 트리거와 결과를 GitHub Actions 워크플로우에서 단일하게 추적하기 어려웠다.
 
-현재는 GitHub Actions의 `deploy`/`deploy-docs` job (self-hosted runner)이 유일한 배포 실행 주체다. EC2 재생성 후 runner가 재등록되면 이후 배포부터 정상 동작한다.
+현재 백엔드는 GitHub Actions의 `deploy` job(self-hosted runner)이 유일한 배포 실행 주체다. 문서 사이트는 `OLma-Docs`의 GitHub Pages workflow가 배포한다. EC2 재생성 후 runner가 재등록되면 이후 백엔드 배포부터 정상 동작한다.
 
 ---
 

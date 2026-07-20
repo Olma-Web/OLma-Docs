@@ -36,7 +36,6 @@ flowchart TD
 | 공개 도메인 | 내부 대상 |
 | --- | --- |
 | `https://api.olma.kro.kr` | `localhost:8080` |
-| `https://docs.olma.kro.kr` | `/var/www/docs` |
 | `https://grafana.olma.kro.kr` | `localhost:3000` |
 
 백엔드 컨테이너는 `127.0.0.1:8080:8080`으로 바인딩되어 있어, 외부에서 8080 포트로 직접 접근하는 구조가 아니다. 운영 구성은 [배포 아키텍처](../ops/deploy)에 기록한다.

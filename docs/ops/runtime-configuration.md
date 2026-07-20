@@ -12,22 +12,17 @@ description: EC2에서 실행되는 도메인, Caddy, Docker, 환경 변수, run
 
 | 도메인 | 역할 | 내부 연결 |
 | --- | --- | --- |
-| `docs.olma.kro.kr` | Docusaurus 문서 사이트 | `/var/www/docs` |
+| `olma-web.github.io/OLma-Docs` | Docusaurus 문서 사이트 | GitHub Pages |
 | `api.olma.kro.kr` | Spring Boot API | `localhost:8080` |
 | `grafana.olma.kro.kr` | Grafana dashboard | `localhost:3000` |
 
-세 도메인은 모두 Caddy가 HTTPS 인증서 발급과 reverse proxy/static file serving을 처리한다.
+API와 Grafana 도메인은 Caddy가 HTTPS 인증서 발급과 reverse proxy를 처리한다. 문서 사이트는 GitHub Pages가 정적 파일을 서빙한다.
 
 ## Caddy 설정
 
 Terraform 기준 Caddyfile:
 
 ```caddy
-docs.olma.kro.kr {
-  root * /var/www/docs
-  file_server
-}
-
 api.olma.kro.kr {
   reverse_proxy localhost:8080
 }
@@ -98,7 +93,7 @@ Grafana는 anonymous viewer 접근을 허용하고 로그인 폼/basic auth를 �
 | --- | --- |
 | repo | `Olma-Web/OLma-BE` |
 | runner label | `self-hosted`, `Linux`, `ARM64`, `olma` |
-| 주요 job | `deploy`, `deploy-docs`, `deploy-monitoring` |
+| 주요 job | `deploy`, `deploy-monitoring` |
 
 확인 명령:
 
@@ -117,7 +112,6 @@ EC2가 교체되면 runner 등록은 새 인스턴스에 자동 복원되지 않
 | --- | --- | --- |
 | `region` | AWS region | `ap-northeast-2` |
 | `domain` | API 도메인 | `api.olma.kro.kr` |
-| `docs_domain` | 문서 사이트 도메인 | `docs.olma.kro.kr` |
 | `grafana_domain` | Grafana 도메인 | `grafana.olma.kro.kr` |
 | `ghcr_image` | 백엔드 이미지 | `olma-web/olma-backend` |
 | `db_instance_class` | RDS 인스턴스 타입 | `db.t4g.micro` |
@@ -127,7 +121,6 @@ EC2가 교체되면 runner 등록은 새 인스턴스에 자동 복원되지 않
 | output | 의미 |
 | --- | --- |
 | `api_url` | `https://api.olma.kro.kr` |
-| `docs_url` | `https://docs.olma.kro.kr` |
 | `grafana_url` | `https://grafana.olma.kro.kr` |
 | `public_ip` | EC2 Elastic IP |
 | `db_endpoint` | RDS endpoint |
@@ -153,7 +146,6 @@ EC2 교체 후 별도 확인이 필요한 것:
 | 항목 | 이유 |
 | --- | --- |
 | GitHub Actions runner | GitHub 등록 토큰으로 새 인스턴스에 재등록 필요 |
-| `/var/www/docs` | 새 EC2는 빈 디렉터리이므로 docs 배포 필요 |
 | 모니터링 stack | `deploy-monitoring` workflow 또는 compose 재실행 필요 |
 | Grafana 데이터 | Docker volume이 인스턴스 로컬에 있으므로 교체 시 초기화 가능 |
 | SSH known_hosts | EIP는 같아도 host key가 바뀜 |
@@ -161,7 +153,7 @@ EC2 교체 후 별도 확인이 필요한 것:
 ## 점검 명령 모음
 
 ```bash
-curl -I https://docs.olma.kro.kr/
+curl -I https://olma-web.github.io/OLma-Docs/
 curl -I https://api.olma.kro.kr/v3/api-docs
 curl -I https://api.olma.kro.kr/swagger-ui.html
 curl -I https://grafana.olma.kro.kr/

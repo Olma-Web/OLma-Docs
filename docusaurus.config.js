@@ -11,8 +11,8 @@ const config = {
     v4: true,
   },
 
-  url: 'https://docs.olma.kro.kr',
-  baseUrl: '/',
+  url: 'https://olma-web.github.io',
+  baseUrl: '/OLma-Docs/',
 
   organizationName: 'Olma-Web',
   projectName: 'OLma-Docs',
