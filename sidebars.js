@@ -17,7 +17,6 @@ const sidebars = {
         'frontend/api-integration',
         'frontend/auth-flow',
         'frontend/domain-flows',
-        'frontend/screenshots',
       ],
     },
   ],
