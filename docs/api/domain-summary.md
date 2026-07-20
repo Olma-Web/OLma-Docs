@@ -6,7 +6,7 @@ description: 컨트롤러 기준으로 OLma API의 도메인, 주요 경로, 인
 
 # 도메인별 API 요약
 
-이 문서는 OLma 백엔드 API를 컨트롤러/도메인 단위로 빠르게 파악하기 위한 요약 문서다. 상세 요청/응답 스키마는 Swagger UI와 OpenAPI JSON을 기준으로 확인한다.
+이 문서는 OLma 백엔드 API를 컨트롤러/도메인 단위로 빠르게 파악하기 위한 요약 문서다. 상세 요청/응답 스키마는 [운영 API OpenAPI 스냅샷](https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json)을 기준으로 확인한다.
 
 기준 코드: `src/main/java/com/olma/controller/*Controller.java`  
 공통 규칙: [API 공통 규격](./common)
@@ -30,10 +30,10 @@ flowchart LR
 | 구분 | 인증 |
 | --- | --- |
 | `/v1/auth/signup`, `/v1/auth/login` | 불필요 |
-| `/swagger-ui`, `/v3/api-docs`, `/actuator` | 불필요 |
+| `/v3/api-docs`, `/actuator` | 불필요 |
 | 그 외 비즈니스 API | 필요 |
 
-인증이 필요한 요청은 `Authorization: Bearer <JWT>` 헤더를 사용한다. 실제 인증 여부는 Swagger 어노테이션이 아니라 `JwtFilter`의 인증 제외 경로가 결정한다.
+인증이 필요한 요청은 `Authorization: Bearer <JWT>` 헤더를 사용한다. 실제 인증 여부는 OpenAPI 어노테이션이 아니라 `JwtFilter`의 인증 제외 경로가 결정한다.
 
 ## 도메인별 요약
 
@@ -41,6 +41,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | Auth | `/v1/auth` | 회원가입, 로그인, 로그아웃 | 로그인, 회원가입 |
 | UserProfile | `/v1/users` | 프로필 조회/수정, 제출 이력, 비밀번호 변경, 회원 탈퇴 | 설정, 대시보드, 커리어, 온보딩 |
+| UserDraft | `/v1/users/me/drafts` | 온보딩/견적 입력 진행 상태 저장과 완료 처리 | 온보딩, 견적 |
 | ReferenceData | `/v1/reference` | 직무, 경력, 자격증 등 기준 데이터 조회 | 온보딩, 대시보드, 커뮤니티 필터 |
 | RateSubmission | `/v1/submissions` | 단가 제보 생성/조회/수정/숨김 | 온보딩, 커리어 |
 | Benchmark | `/v1/benchmark` | 시장 단가 통계와 사용자 단가 비교 | 대시보드 |
@@ -67,6 +68,18 @@ flowchart LR
 | `GET` | `/v1/users/{userId}/submissions` | 사용자 단가 제출 이력 조회 |
 | `PUT` | `/v1/users/me/password` | 비밀번호 변경 |
 | `DELETE` | `/v1/users/me` | 회원 탈퇴 |
+
+## UserDraft API
+
+| Method | Path | 설명 |
+| --- | --- | --- |
+| `GET` | `/v1/users/me/drafts` | 내 드래프트 목록 조회 |
+| `GET` | `/v1/users/me/drafts/{type}` | 특정 타입의 드래프트 조회 |
+| `PATCH` | `/v1/users/me/drafts/{type}` | 드래프트 진행 상태 저장 |
+| `PATCH` | `/v1/users/me/drafts/{type}/complete` | 드래프트 완료 처리 |
+| `DELETE` | `/v1/users/me/drafts/{type}` | 드래프트 삭제 |
+
+`type`은 `ONBOARDING`, `ESTIMATE`를 사용한다. 요청 바디의 `state`는 JSON 객체이며, 응답은 `id`, `type`, `status`, `state`, `createdAt`, `updatedAt`, `completedAt`을 포함한다. `status`는 `IN_PROGRESS`, `COMPLETED` 중 하나다.
 
 ## ReferenceData API
 
@@ -145,7 +158,7 @@ Community는 엔드포인트 수가 가장 많은 도메인이다. 추후 상세
 | --- | --- | --- |
 | 공통 API | 상세 문서 있음 | 유지 |
 | RateSubmission | 상세 문서 있음 | 권한 정책 개선 시 갱신 |
-| Auth/User/Reference | 요약 수준 | 변경 시 Swagger와 이 문서 갱신 |
+| Auth/User/UserDraft/Reference | 요약 수준 | 변경 시 OpenAPI 스냅샷과 이 문서 갱신 |
 | Benchmark | 요약 수준 | 통계 계산 정책 문서화 검토 |
 | Estimate | 요약 수준 | 견적 계산 정책 문서화 검토 |
 | Community | 요약 수준 | 상세 정책 문서 추가 검토 |

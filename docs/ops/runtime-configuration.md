@@ -120,8 +120,8 @@ EC2가 교체되면 runner 등록은 새 인스턴스에 자동 복원되지 않
 
 | output | 의미 |
 | --- | --- |
-| `api_url` | `https://api.olma.kro.kr` |
-| `grafana_url` | `https://grafana.olma.kro.kr` |
+| `api_url` | `api.olma.kro.kr` |
+| `grafana_url` | `grafana.olma.kro.kr` |
 | `public_ip` | EC2 Elastic IP |
 | `db_endpoint` | RDS endpoint |
 | `ssh_command` | EC2 SSH 접속 명령 |
@@ -154,9 +154,6 @@ EC2 교체 후 별도 확인이 필요한 것:
 
 ```bash
 curl -I https://olma-web.github.io/OLma-Docs/
-curl -I https://api.olma.kro.kr/v3/api-docs
-curl -I https://api.olma.kro.kr/swagger-ui.html
-curl -I https://grafana.olma.kro.kr/
 
 ssh ubuntu@13.124.31.106 'docker ps'
 ssh ubuntu@13.124.31.106 'sudo systemctl is-active caddy'

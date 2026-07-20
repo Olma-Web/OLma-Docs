@@ -6,9 +6,9 @@ description: 단가 제보(RateSubmission) 도메인의 비즈니스 정책, 연
 
 # 단가 제출(RateSubmission) API 가이드 & 비즈니스 정책
 
-> 💡 **Swagger vs 본 문서의 차이점**
-> - **Swagger (`/swagger-ui.html`, `/v3/api-docs`):** 요청/응답 DTO 스펙, HTTP 메서드 등 기술적 입출력 규격 확인용.
-> - **본 문서:** Swagger 필드 설명만으로는 안 보이는 비즈니스 규칙(Rule), 도메인 간 연동 흐름(Flow), 예외 처리 정책 확인용.
+> 💡 **OpenAPI 스냅샷 vs 본 문서의 차이점**
+> - **OpenAPI 스냅샷 (`https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json`):** 요청/응답 DTO 스펙, HTTP 메서드 등 기술적 입출력 규격 확인용.
+> - **본 문서:** OpenAPI 필드 설명만으로는 안 보이는 비즈니스 규칙(Rule), 도메인 간 연동 흐름(Flow), 예외 처리 정책 확인용.
 
 기준 코드: `RateSubmissionController.java`, `RateSubmissionService.java`, `RateSubmission.java` (2026-07 기준)
 
@@ -17,7 +17,7 @@ description: 단가 제보(RateSubmission) 도메인의 비즈니스 정책, 연
 ## 1. 도메인 핵심 비즈니스 규칙 (Business Policies)
 
 ### 인증 정책
-`RateSubmissionController`의 `/v1/submissions` 경로는 `JwtFilter`의 인증 제외 경로에 포함되지 않는다. 따라서 **조회(GET)를 포함한 4개 엔드포인트 전부** `Authorization: Bearer <JWT>`가 필요하다. 컨트롤러의 `@SecurityRequirement(name = "BearerAuth")`는 이 동작을 Swagger UI에 표시하기 위한 문서화 어노테이션이다.
+`RateSubmissionController`의 `/v1/submissions` 경로는 `JwtFilter`의 인증 제외 경로에 포함되지 않는다. 따라서 **조회(GET)를 포함한 4개 엔드포인트 전부** `Authorization: Bearer <JWT>`가 필요하다. 컨트롤러의 `@SecurityRequirement(name = "BearerAuth")`는 이 동작을 OpenAPI 문서에 표시하기 위한 문서화 어노테이션이다.
 
 ### userId 폴백 규칙
 `RateSubmissionController.create()`:
@@ -33,7 +33,7 @@ if (request.getUserId() == null) {
 ### 단가 검증 및 정규화 규칙
 - Bean Validation: `amount`는 `@Min(10)` — 10 미만이면 400.
 - 서비스 레이어(`RateSubmissionService.create()`): 환산 월 단가(`normalizedMonthly`)가 계산되면 10~9,999 범위를 벗어날 때 400.
-- `normalizedMonthly` 계산 로직 (`RateSubmission.calculateNormalizedMonthly()`) — Swagger 스키마로는 드러나지 않는 의미론적 규칙:
+- `normalizedMonthly` 계산 로직 (`RateSubmission.calculateNormalizedMonthly()`) — OpenAPI 스키마로는 드러나지 않는 의미론적 규칙:
   - `amountUnit = MONTHLY`: `normalizedMonthly = amount`
   - `amountUnit = TOTAL`: `normalizedMonthly = amount / 환산개월수` (HALF_UP 반올림)
   - `duration` 문자열이 아래 표에 없거나 파싱 실패 시: `normalizedMonthly = null` (범위 검사 자체를 건너뜀)
@@ -125,7 +125,7 @@ sequenceDiagram
 | `PATCH` | `/v1/submissions/{id}/project-name` | 필요 | 프로젝트명 수정 (본인 소유만) |
 | `DELETE` | `/v1/submissions/{id}` | 필요 | 소프트 삭제 (본인 소유 ACTIVE 제보만) |
 
-요청/응답 필드의 전체 스키마는 Swagger UI(`/swagger-ui.html`, 백엔드 서버 경로)에서 확인한다. `RateSubmissionRequest`/`RateSubmissionResponse`에는 `projectName`(선택, 최대 100자) 필드도 포함된다.
+요청/응답 필드의 전체 스키마는 [운영 API OpenAPI 스냅샷](https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json)에서 확인한다. `RateSubmissionRequest`/`RateSubmissionResponse`에는 `projectName`(선택, 최대 100자) 필드도 포함된다.
 
 **참고 — 소프트 삭제의 실제 동작:** `delete`는 물리 삭제가 아니라 `RateSubmission.hide()`를 통해 `status`를 `HIDDEN`으로 바꾸는 소프트 삭제다. `RateSubmissionService.getById()`는 ACTIVE 상태만 조회하므로, 삭제(숨김) 처리된 제보는 ID를 알아도 404로 응답한다.
 
@@ -144,7 +144,7 @@ sequenceDiagram
 
 | 항목 | 현재 동작 | 위험 | 후속 개선 |
 |------|-----------|------|-----------|
-| `SubmissionType` 의미 | `TRACK_A`, `TRACK_B` 이름만 존재 | 클라이언트/문서에서 의미 해석 어려움 | 도메인 용어로 리네임하거나 Swagger 설명 보강 |
+| `SubmissionType` 의미 | `TRACK_A`, `TRACK_B` 이름만 존재 | 클라이언트/문서에서 의미 해석 어려움 | 도메인 용어로 리네임하거나 OpenAPI 설명 보강 |
 
 ---
 
@@ -152,4 +152,4 @@ sequenceDiagram
 
 - [프로젝트 개요](/) — 전체 도메인 지도에서 단가 제출이 차지하는 위치
 - [데이터 모델](/development/data-model) — RateSubmission과 기준 데이터/사용자 관계
-- Swagger UI (`/swagger-ui.html`) — 요청/응답 스키마 전체 명세
+- [운영 API OpenAPI 스냅샷](https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json) — 요청/응답 스키마 전체 명세

@@ -42,7 +42,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "";
 destination: "http://13.124.31.106/:path*"
 ```
 
-이 값은 현재 EC2 IP에 하드코딩되어 있으므로, 운영 기준으로는 `https://api.olma.kro.kr` 또는 환경 변수 기반 설정으로 정리하는 것이 좋다.
+이 값은 현재 EC2 IP에 하드코딩되어 있으므로, 포트폴리오 보존 기준으로는 운영 당시 API origin을 문서화된 설정값이나 환경 변수 기반 설정으로 분리하는 것이 좋다.
 
 ## 인증 헤더
 
@@ -80,6 +80,7 @@ sequenceDiagram
 | --- | --- | --- |
 | `authAPI` | `/v1/auth/signup`, `/v1/auth/login`, `/v1/auth/logout` | 로그인, 회원가입, Topbar |
 | `userAPI` | `/v1/users/{id}`, `/v1/users/{id}/profile`, `/v1/users/me/password`, `/v1/users/me` | 설정, 대시보드, 커리어, 온보딩 |
+| `userDraftAPI` | `/v1/users/me/drafts`, `/v1/users/me/drafts/{type}` | 온보딩, 견적 진행 상태 복원 |
 | `referenceAPI` | `/v1/reference/job-categories`, `/v1/reference/experience-levels` | 대시보드, 커뮤니티 필터 |
 | `submissionAPI` | `/v1/submissions` | 온보딩 |
 | `submissionDeleteAPI` | `/v1/submissions/{id}` | 커리어 |
@@ -121,7 +122,7 @@ API 연동과 관련해 FE가 브라우저에 저장하는 값은 다음과 같�
 | --- | --- |
 | Controller 경로/메서드 | BE `controller/*Controller.java` |
 | Request/Response DTO | BE `dto/*Request`, `dto/*Response` |
-| Swagger 설명 | BE `@Operation`, `@ApiResponse`, `@Schema` |
+| OpenAPI 설명 | BE `@Operation`, `@ApiResponse`, `@Schema` |
 | FE API client | FE `lib/api.ts` |
 | FE 화면 타입 | FE `app/`, `components/`의 interface/type |
 | Docusaurus 문서 | API 문서와 프론트엔드 API 연동 문서 |
@@ -130,7 +131,7 @@ API 연동과 관련해 FE가 브라우저에 저장하는 값은 다음과 같�
 
 | 항목 | 현재 상태 | 개선 방향 |
 | --- | --- | --- |
-| API origin | `NEXT_PUBLIC_BASE_URL`가 없으면 상대 경로, `next.config.ts`는 IP rewrite | 운영 환경은 `https://api.olma.kro.kr` 기준으로 명확화 |
+| API origin | `NEXT_PUBLIC_BASE_URL`가 없으면 상대 경로, `next.config.ts`는 IP rewrite | 운영 당시 API origin을 환경 변수 기준으로 명확화 |
 | 타입 관리 | API request/response 타입을 수동 선언 | OpenAPI JSON 기반 타입 생성 검토 |
 | 삭제 API | 일부 API가 공통 `fetchAPI()` 대신 직접 `fetch()` 사용 | 공통 에러 처리와 인증 헤더 로직 재사용 |
 | 401 처리 | 페이지별 redirect/catch에 분산 | 공통 인증 만료 처리 도입 |

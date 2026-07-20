@@ -115,12 +115,6 @@ npm run dev
 export NEXT_PUBLIC_BASE_URL=http://localhost:8080
 ```
 
-운영 API를 기준으로 확인해야 할 때는 다음 값을 사용한다.
-
-```bash
-export NEXT_PUBLIC_BASE_URL=https://api.olma.kro.kr
-```
-
 프론트엔드 빌드와 lint는 아래 명령으로 확인한다.
 
 ```bash
@@ -160,7 +154,7 @@ npm run build
 
 ## 8. 변경 전 확인 항목
 
-- API 동작 변경이 있으면 Swagger 주석과 Docusaurus API 문서를 함께 확인한다.
+- API 동작 변경이 있으면 OpenAPI 주석과 Docusaurus API 문서를 함께 확인한다.
 - 프론트엔드 화면/API 연동 변경이 있으면 [프론트엔드 API 연동](../frontend/api-integration)과 [주요 도메인 흐름](../frontend/domain-flows)을 함께 확인한다.
 - DB 스키마 변경은 Flyway 마이그레이션으로 남기고, JPA 엔티티와 불일치하지 않는지 테스트로 확인한다.
 - 인증이 필요한 새 API는 `JwtFilter`의 인증 제외 경로에 해당하지 않는지 확인한다.

@@ -126,6 +126,4 @@ src/main/java/com/olma/
 | 구분 | 링크 |
 |------|------|
 | 문서 사이트 | [olma-web.github.io/OLma-Docs](https://olma-web.github.io/OLma-Docs/) |
-| Swagger UI | [api.olma.kro.kr/swagger-ui.html](https://api.olma.kro.kr/swagger-ui.html) |
-| OpenAPI JSON | [api.olma.kro.kr/v3/api-docs](https://api.olma.kro.kr/v3/api-docs) |
-| Grafana | [grafana.olma.kro.kr](https://grafana.olma.kro.kr/) |
+| OpenAPI JSON | [운영 API 스냅샷](https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json) |

@@ -80,7 +80,7 @@ private static final List<String> PERMIT_PREFIXES = List.of(
 
 ### 2.3 `@SecurityRequirement`와 실제 인증 기준
 
-컨트롤러에 붙은 `@SecurityRequirement(name = "BearerAuth")`(`OpenApiConfig`에서 정의)는 Swagger UI에 자물쇠 아이콘을 표시하는 **문서화 목적**일 뿐이다. 실제로 어떤 경로가 인증을 요구하는지는 전적으로 `JwtFilter`의 `PERMIT_PREFIXES` 목록이 결정한다.
+컨트롤러에 붙은 `@SecurityRequirement(name = "BearerAuth")`(`OpenApiConfig`에서 정의)는 OpenAPI 문서에 인증 필요 여부를 표시하는 **문서화 목적**일 뿐이다. 실제로 어떤 경로가 인증을 요구하는지는 전적으로 `JwtFilter`의 `PERMIT_PREFIXES` 목록이 결정한다.
 
 즉 컨트롤러에 이 어노테이션을 붙이거나 빼도 실제 인증 여부는 바뀌지 않는다. 새 컨트롤러를 인증 없이 열고 싶다면 어노테이션을 빼는 게 아니라 `PERMIT_PREFIXES`에 경로를 추가해야 하고, 반대로 어노테이션이 없는 컨트롤러도 `PERMIT_PREFIXES`에 없으면 그대로 인증이 강제된다.
 

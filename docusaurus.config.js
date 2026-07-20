@@ -81,13 +81,8 @@ const config = {
             label: '운영',
           },
           {
-            href: 'https://api.olma.kro.kr/swagger-ui.html',
-            label: 'Swagger',
-            position: 'right',
-          },
-          {
-            href: 'https://grafana.olma.kro.kr/',
-            label: 'Grafana',
+            href: 'https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json',
+            label: 'OpenAPI',
             position: 'right',
           },
           {

@@ -1,12 +1,12 @@
 ---
 sidebar_position: 0
 title: API 공통 규격
-description: 인증, 공통 에러 응답, 날짜/시간, Swagger/OpenAPI 경로 규격
+description: 인증, 공통 에러 응답, 날짜/시간, OpenAPI 스펙 경로 규격
 ---
 
 # API 공통 규격
 
-이 문서는 OLma 백엔드 API 전반에 공통으로 적용되는 인증, 에러 응답, 문서화 경로를 정리한다.
+이 문서는 OLma 백엔드 API 전반에 공통으로 적용되는 인증, 에러 응답, 문서화 경로를 정리한다. 요청/응답 스키마 전체는 [운영 API OpenAPI 스냅샷](https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json)에 보존되어 있다.
 
 ---
 
@@ -14,8 +14,8 @@ description: 인증, 공통 에러 응답, 날짜/시간, Swagger/OpenAPI 경로
 
 | 구분 | 경로 |
 |------|------|
-| Swagger UI | `/swagger-ui.html` |
 | OpenAPI JSON | `/v3/api-docs` |
+| 보존된 OpenAPI 스냅샷 | `https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json` |
 | Actuator Health | `/actuator/health` |
 | Prometheus Metrics | `/actuator/prometheus` |
 
@@ -88,12 +88,11 @@ sequenceDiagram
 | 경로 | 용도 |
 |------|------|
 | `/v1/auth/` | 회원가입, 로그인 등 인증 진입점 |
-| `/swagger-ui` | Swagger UI |
 | `/v3/api-docs` | OpenAPI JSON |
 | `/actuator` | Health, Prometheus 등 운영 엔드포인트 |
 | `OPTIONS` | CORS preflight |
 
-`@SecurityRequirement`는 Swagger UI에 인증 필요 여부를 표시하기 위한 문서화 어노테이션이다. 실제 인증 여부는 `JwtFilter`의 인증 제외 경로가 결정한다.
+`@SecurityRequirement`는 OpenAPI 문서에 인증 필요 여부를 표시하기 위한 문서화 어노테이션이다. 실제 인증 여부는 `JwtFilter`의 인증 제외 경로가 결정한다.
 
 ---
 

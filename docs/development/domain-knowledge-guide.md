@@ -27,7 +27,7 @@ description: 이름만으로는 파악하기 어려운 도메인 용어와 enum�
 
 ## 2. 견적(Estimate) 도메인 — enum에 숨겨진 가격 배율
 
-Swagger UI 스키마에는 아래 enum들이 단순 문자열(이름)로만 노출되지만, 실제로는 `EstimateService.doCalculate()`의 견적 계산식에 곱해지는 배율/할증률이 값으로 붙어 있다.
+OpenAPI 스키마에는 아래 enum들이 단순 문자열(이름)로만 노출되지만, 실제로는 `EstimateService.doCalculate()`의 견적 계산식에 곱해지는 배율/할증률이 값으로 붙어 있다.
 
 ```java
 BigDecimal uxMultiplier = request.getUxEngagement().getMultiplier();
@@ -94,7 +94,7 @@ flowchart TD
 
 ## 4. 참고 — 가이드에서 제외한 자기설명적 enum
 
-아래 값들은 이름 자체로 의미가 명확해 별도 설명을 생략한다. 상세 스펙은 Swagger를 참고한다.
+아래 값들은 이름 자체로 의미가 명확해 별도 설명을 생략한다. 상세 스펙은 [운영 API OpenAPI 스냅샷](https://olma-web.github.io/OLma-Docs/artifacts/openapi-2026-08-01.json)을 참고한다.
 
 - `WorkFormat` (`ON_SITE`, `REMOTE`, `HYBRID`)
 - `AmountUnit` (`MONTHLY`, `TOTAL`)
